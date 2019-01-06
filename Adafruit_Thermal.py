@@ -181,12 +181,12 @@ class Adafruit_Thermal(Serial):
 	def writeBytes(self, *args):
 		if self.writeToStdout:
 			for arg in args:
-				sys.stdout.write(chr(arg))
+				sys.stdout.write(bytes([arg]))
 		else:
 			self.timeoutWait()
 			self.timeoutSet(len(args) * self.byteTime)
 			for arg in args:
-				super(Adafruit_Thermal, self).write(chr(arg))
+				super(Adafruit_Thermal, self).write(bytes([arg]))
 
 	# Override write() method to keep track of paper feed.
 	def write(self, *data):
@@ -341,14 +341,14 @@ class Adafruit_Thermal(Serial):
 			n = len(text)
 			if n > 255: n = 255
 			if self.writeToStdout:
-				sys.stdout.write(chr(n))
+				sys.stdout.write(bytes([n]))
 				for i in range(n):
 					sys.stdout.write(text[i])
 			else:
-				super(Adafruit_Thermal, self).write(chr(n))
+				super(Adafruit_Thermal, self).write(bytes([n]))
 				for i in range(n):
 					super(Adafruit_Thermal,
-					  self).write(text[i])
+					  self).write(bytearray(text[i], 'cp437'))
 		else:
 			# Older firmware: write string + NUL
 			if self.writeToStdout:
@@ -504,7 +504,7 @@ class Adafruit_Thermal(Serial):
 		self.writeBytes(27, 45, 0)
 
 	def printBitmap(self, w, h, bitmap, LaaT=False):
-		rowBytes = (w + 7) / 8  # Round up to next byte boundary
+		rowBytes = (w + 7) // 8  # Round up to next byte boundary
 		if rowBytes >= 48:
 			rowBytesClipped = 48  # 384 pixels max width
 		else:
@@ -532,10 +532,10 @@ class Adafruit_Thermal(Serial):
 				for x in range(rowBytesClipped):
 					if self.writeToStdout:
 						sys.stdout.write(
-						  chr(bitmap[i]))
+						  bytes([bitmap[i]]))
 					else:
 						super(Adafruit_Thermal,
-						  self).write(chr(bitmap[i]))
+						  self).write(bytes([bitmap[i]]))
 					i += 1
 				i += rowBytes - rowBytesClipped
 			self.timeoutSet(chunkHeight * self.dotPrintTime)
@@ -559,7 +559,7 @@ class Adafruit_Thermal(Serial):
 		height = image.size[1]
 		if width > 384:
 			width = 384
-		rowBytes = (width + 7) / 8
+		rowBytes = (width + 7) // 8
 		bitmap   = bytearray(rowBytes * height)
 		pixels   = image.load()
 
@@ -726,11 +726,11 @@ class Adafruit_Thermal(Serial):
 	# with existing code written for the Arduino library.
 	def print(self, *args, **kwargs):
 		for arg in args:
-			self.write(str(arg))
+			self.write(bytearray(arg, 'cp437'))
 
 	# For Arduino code compatibility again
 	def println(self, *args, **kwargs):
 		for arg in args:
-			self.write(str(arg))
-		self.write('\n')
+			self.write(bytearray(arg, 'cp437'))
+		self.write(b'\n')
 
